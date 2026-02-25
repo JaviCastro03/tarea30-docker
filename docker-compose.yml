@@ -1,0 +1,78 @@
+services:
+
+  #-------------------------------------------------------------------------
+  # SERVICIO SERVIDOR WEB (php:7.4-apache con mysqli y código WP descargado
+  #-------------------------------------------------------------------------
+  web:
+    # IMAGEN USADA (agregar el usuario de DockerHub)
+    image: javiercastromuriana2006/php-apache-xdebug:8.2
+    # NOMBRE QUE LE VOY A DAR AL CONTENEDOR
+    container_name: web
+    # REDIRECCIÓN DE PUERTOS
+    ports:
+      - 8888:80
+    # SERVICIOS QUE TIENEN QUE ARRANCAR ANTES DE ARRANCAR ESTE
+    depends_on:
+      - bbdd
+
+    volumes:
+      - type: bind
+        # De mi directorio actual, todo lo que contenga
+        source: "."
+        # Enlazalo a está ruta
+        target: /var/www/html
+
+    # REDES A USAR
+    networks:
+      - ejemplored
+
+  #--------------------------------------------#
+  # SERVICIO SERVIDOR DE BASE DE DATOS MARIADB #
+  #--------------------------------------------#
+
+  # NOMBRE DEL SERVICIO
+  bbdd:
+    # IMAGEN OFICIAL USADA (DockerHub la busca en el caso de que no esté descargada)
+    image: mariadb
+    # NOMBRE QUE LE VOY A DAR AL CONTENEDOR
+    container_name: bd
+    # LISTA DE VALORES DE ENTORNO CON SUS VALORES
+    environment:
+      MYSQL_ROOT_PASSWORD: Ciclo2gs
+      MYSQL_DATABASE: tienda
+      #MYSQL_USER: root
+      #MYSQL_PASSWORD:
+    # REDIRECCIÓN DE PUERTOS
+    ports:
+      - 3306:3306
+    # VOLÚMENES A USAR POR EL CONTENEDOR
+    volumes:
+      # DOCKER VOLUME
+      - data:/var/lib/mysql
+      # ESTO ES PARA INCORPORAR LA BASE DE DATOS
+      # Dir actual (ruta),nombreFichero.sql, a partir de los dos puntos hasta el archivo .sql (se le podría dar otro nombre)
+      - ./bbdd.sql:/docker-entrypoint-initdb.d/bbdd.sql
+
+    # REDES A USAR
+    networks:
+      - ejemplored
+
+# DEFINICIÓN DE VOLÚMENES DOCKER A USAR POR LOS SERVICIOS (OPCIONAL)
+volumes:
+  data:
+    # TIPO DE DRIVER
+    driver: local
+
+# DEFINICIÓN DE LAS REDES A USAR POR LOS SERVICIOS (OPCIONAL)
+networks:
+  # NOMBRE DE LA RED
+  ejemplored:
+    # DRIVER DE LA RED
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/16 # 20 en vez de 30
+
+# Creación de la aplicación multicapa
+# docker compose up -d
